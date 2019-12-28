@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -35,17 +35,19 @@ func (app *App) Initialize() {
 func (app *App) initializeRouters() {
 	app.Router.HandleFunc("/api/shorten", app.createShortlink).Methods("POST")
 	app.Router.HandleFunc("/api/info", app.getShortlink).Methods("GET")
-	app.Router.HandleFunc("/api/{shortlink:[a-zA-Z0-9]{1,11}}", app.redirect).Methods("GET")
+	app.Router.HandleFunc("/{shortlink:[a-zA-Z0-9]{1,11}}", app.redirect).Methods("GET")
 }
 
 func (app *App) createShortlink(res http.ResponseWriter, req *http.Request) {
 	var shortReq shortenReq
 	if err := json.NewDecoder(req.Body).Decode(&shortReq); err != nil {
+		fmt.Println("decode error")
 		return
 	}
 
 	// check shortenReq cretaria
 	if err := validator.Validate(shortReq); err != nil {
+		fmt.Println("validate error")
 		return
 	}
 
@@ -54,14 +56,20 @@ func (app *App) createShortlink(res http.ResponseWriter, req *http.Request) {
 	fmt.Printf("%v\n", shortReq)
 }
 
-func (app *App) getShortlink(res http.ResponseWriter, req *http.Request) {
+func (app *App) getShortlink(w http.ResponseWriter, r *http.Request) {
+	vals := r.URL.Query()
+	s := vals.Get("shortlink")
 
+	fmt.Printf("%s\n", s)
 }
 
-func (app *App) redirect(res http.ResponseWriter, req *http.Request) {
-
+func (app *App) redirect(w http.ResponseWriter, r *http.Request) {
+	// need to returen status code 302
+	vars := mux.Vars(r) // return a dict
+	fmt.Printf("%s\n", vars["shortlink"])
 }
 
-func main() {
-
+// Run the app at certain address
+func (app *App) Run(addr string) {
+	log.Fatal(http.ListenAndServe(addr, app.Router))
 }

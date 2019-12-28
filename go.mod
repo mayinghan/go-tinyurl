@@ -1,4 +1,4 @@
-module app
+module goshorturl
 
 go 1.13
 
